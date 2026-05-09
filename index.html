@@ -1,0 +1,404 @@
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans)}
+.tabs{display:flex;gap:4px;margin-bottom:1.5rem;border-bottom:0.5px solid var(--color-border-tertiary);padding-bottom:0;flex-wrap:wrap}
+.tab{padding:8px 14px;font-size:14px;cursor:pointer;border:none;background:transparent;color:var(--color-text-secondary);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab.active{color:var(--color-text-primary);border-bottom:2px solid #7F77DD;font-weight:500}
+.tab:hover:not(.active){color:var(--color-text-primary)}
+.section{display:none}.section.active{display:block}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1rem 1.25rem;margin-bottom:1rem}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1rem}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:1.5rem}
+.metric{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:1rem;text-align:center}
+.metric .val{font-size:22px;font-weight:500;color:var(--color-text-primary)}
+.metric .lbl{font-size:12px;color:var(--color-text-secondary);margin-top:4px}
+label{font-size:13px;color:var(--color-text-secondary);display:block;margin-bottom:4px}
+input,select,textarea{width:100%;font-size:14px;padding:8px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary)}
+textarea{resize:vertical;min-height:60px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;font-size:14px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:transparent;color:var(--color-text-primary);cursor:pointer}
+.btn:hover{background:var(--color-background-secondary)}
+.btn.primary{background:#7F77DD;border-color:#7F77DD;color:#fff}
+.btn.primary:hover{background:#534AB7}
+.btn.danger{color:var(--color-text-danger);border-color:var(--color-border-danger)}
+.btn.danger:hover{background:var(--color-background-danger)}
+.sets-row{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+.sets-row input{width:90px;flex-shrink:0}
+.sets-row .lbl{font-size:12px;color:var(--color-text-secondary);white-space:nowrap}
+.ressenti{display:flex;gap:8px;margin-bottom:1rem}
+.res-btn{flex:1;padding:8px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);background:var(--color-background-secondary);cursor:pointer;text-align:center;font-size:18px}
+.res-btn.sel{border:2px solid #7F77DD;background:#EEEDFE}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:8px 12px;color:var(--color-text-secondary);font-weight:400;border-bottom:0.5px solid var(--color-border-tertiary)}
+td{padding:8px 12px;border-bottom:0.5px solid var(--color-border-tertiary);color:var(--color-text-primary)}
+tr:last-child td{border-bottom:none}
+.muscle-tag{display:inline-block;background:#EEEDFE;color:#3C3489;font-size:11px;padding:2px 8px;border-radius:var(--border-radius-md);margin-right:4px}
+.empty{color:var(--color-text-tertiary);font-size:14px;text-align:center;padding:2rem}
+.filter-row{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap}
+.filter-row input,.filter-row select{width:auto;flex:1;min-width:120px}
+.section-title{font-size:15px;font-weight:500;margin-bottom:1rem;color:var(--color-text-primary)}
+.exo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-top:1rem}
+.exo-card{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.exo-card .exo-name{font-size:14px;font-weight:500;color:var(--color-text-primary)}
+.exo-card .exo-muscle{font-size:11px;color:var(--color-text-secondary);margin-top:2px}
+.exo-del{background:transparent;border:none;cursor:pointer;color:var(--color-text-tertiary);font-size:16px;padding:2px;display:flex;align-items:center}
+.exo-del:hover{color:#A32D2D}
+</style>
+
+<h2 class="sr-only" style="position:absolute;left:-9999px">Dashboard de suivi sportif personnel</h2>
+
+<div style="padding:1rem 0">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+    <div>
+      <div style="font-size:20px;font-weight:500;color:var(--color-text-primary)">🏋️ Suivi sportif</div>
+      <div style="font-size:13px;color:var(--color-text-secondary)" id="today-date"></div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('saisie')">➕ Nouvelle session</button>
+    <button class="tab" onclick="switchTab('historique')">🕓 Historique</button>
+    <button class="tab" onclick="switchTab('exercices')">📋 Exercices</button>
+    <button class="tab" onclick="switchTab('stats')">📈 Progression</button>
+  </div>
+
+  <!-- SAISIE -->
+  <div class="section active" id="tab-saisie">
+    <div class="card">
+      <div class="section-title">Informations de la session</div>
+      <div class="grid2">
+        <div><label>Date</label><input type="date" id="s-date"></div>
+        <div><label>Muscles ciblés</label>
+          <select id="s-muscle" onchange="filterExoSelect()">
+            <option value="">Sélectionner...</option>
+            <option>Pectoraux</option><option>Dos</option><option>Épaules</option>
+            <option>Biceps</option><option>Triceps</option><option>Abdominaux</option>
+            <option>Jambes</option><option>Fessiers</option><option>Full body</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label>Exercice</label>
+        <select id="s-exercice">
+          <option value="">— Sélectionner un exercice —</option>
+        </select>
+        <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:4px">ℹ️ Ajoutez vos exercices dans l'onglet <strong>Exercices</strong></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+        <div class="section-title" style="margin:0">Séries</div>
+        <button class="btn" onclick="addSet()">➕ Ajouter une série</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <div style="width:40px;font-size:12px;color:var(--color-text-secondary)">Série</div>
+        <div style="flex:1;font-size:12px;color:var(--color-text-secondary)">Répétitions</div>
+        <div style="flex:1;font-size:12px;color:var(--color-text-secondary)">Charge (kg)</div>
+        <div style="width:32px"></div>
+      </div>
+      <div id="sets-container"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Ressenti</div>
+      <div class="ressenti" id="ressenti-btns">
+        <button class="res-btn" onclick="selRes(1)" title="Très difficile">😫</button>
+        <button class="res-btn" onclick="selRes(2)" title="Difficile">😓</button>
+        <button class="res-btn" onclick="selRes(3)" title="Correct">😐</button>
+        <button class="res-btn" onclick="selRes(4)" title="Bon">😊</button>
+        <button class="res-btn" onclick="selRes(5)" title="Excellent">💪</button>
+      </div>
+      <div>
+        <label>Prochain objectif</label>
+        <textarea id="s-objectif" placeholder="Ex: Passer à 80 kg la semaine prochaine..."></textarea>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:1rem">
+        <button class="btn primary" onclick="saveSession()">💾 Enregistrer la session</button>
+      </div>
+    </div>
+    <div id="save-msg" style="color:#1D9E75;font-size:13px;text-align:center;display:none;margin-top:8px">✅ Session enregistrée !</div>
+  </div>
+
+  <!-- HISTORIQUE -->
+  <div class="section" id="tab-historique">
+    <div class="grid4" id="metrics-row">
+      <div class="metric"><div class="val" id="m-sessions">0</div><div class="lbl">Sessions totales</div></div>
+      <div class="metric"><div class="val" id="m-volume">0</div><div class="lbl">Volume total (kg)</div></div>
+      <div class="metric"><div class="val" id="m-series">0</div><div class="lbl">Séries totales</div></div>
+      <div class="metric"><div class="val" id="m-muscles">—</div><div class="lbl">Muscle favori</div></div>
+    </div>
+    <div class="card">
+      <div class="filter-row">
+        <input type="date" id="f-date" onchange="renderHistory()">
+        <select id="f-muscle" onchange="renderHistory()">
+          <option value="">Tous les muscles</option>
+          <option>Pectoraux</option><option>Dos</option><option>Épaules</option>
+          <option>Biceps</option><option>Triceps</option><option>Abdominaux</option>
+          <option>Jambes</option><option>Fessiers</option><option>Full body</option>
+        </select>
+        <button class="btn" onclick="document.getElementById('f-date').value='';document.getElementById('f-muscle').value='';renderHistory()">Réinitialiser</button>
+      </div>
+      <div id="history-table"></div>
+    </div>
+  </div>
+
+  <!-- EXERCICES -->
+  <div class="section" id="tab-exercices">
+    <div class="card">
+      <div class="section-title">Ajouter un exercice</div>
+      <div class="grid2">
+        <div><label>Nom de l'exercice</label><input type="text" id="e-nom" placeholder="Ex: Développé couché, Squat..."></div>
+        <div><label>Groupe musculaire</label>
+          <select id="e-muscle">
+            <option value="">Sélectionner...</option>
+            <option>Pectoraux</option><option>Dos</option><option>Épaules</option>
+            <option>Biceps</option><option>Triceps</option><option>Abdominaux</option>
+            <option>Jambes</option><option>Fessiers</option><option>Full body</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end">
+        <button class="btn primary" onclick="addExercice()">➕ Ajouter</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+        <div class="section-title" style="margin:0">Mes exercices</div>
+        <select id="ef-muscle" onchange="renderExercices()" style="width:auto;font-size:13px;padding:6px 10px">
+          <option value="">Tous les muscles</option>
+          <option>Pectoraux</option><option>Dos</option><option>Épaules</option>
+          <option>Biceps</option><option>Triceps</option><option>Abdominaux</option>
+          <option>Jambes</option><option>Fessiers</option><option>Full body</option>
+        </select>
+      </div>
+      <div id="exo-list"></div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="section" id="tab-stats">
+    <div class="card">
+      <div class="section-title">Évolution du volume par session</div>
+      <div style="position:relative;width:100%;height:220px"><canvas id="chart-volume"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="section-title">Répartition par groupe musculaire</div>
+      <div style="display:flex;gap:1rem;align-items:center">
+        <div style="position:relative;width:180px;height:180px;flex-shrink:0"><canvas id="chart-muscles"></canvas></div>
+        <div id="muscle-legend" style="flex:1;font-size:13px"></div>
+      </div>
+    </div>
+    <div class="card" id="objectifs-card">
+      <div class="section-title">🎯 Derniers objectifs</div>
+      <div id="objectifs-list"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+let sessions=[], exercices=[], selectedRes=0, setCount=0, charts={};
+const SK='sportif_sessions_v1', EK='sportif_exercices_v1';
+
+async function loadData(){
+  try{const r=await window.storage.get(SK);if(r&&r.value)sessions=JSON.parse(r.value);}catch(e){sessions=[];}
+  try{const r=await window.storage.get(EK);if(r&&r.value)exercices=JSON.parse(r.value);}catch(e){exercices=[];}
+  renderAll();
+}
+async function saveData(){try{await window.storage.set(SK,JSON.stringify(sessions));}catch(e){}}
+async function saveExo(){try{await window.storage.set(EK,JSON.stringify(exercices));}catch(e){}}
+
+function init(){
+  document.getElementById('today-date').textContent=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('s-date').value=new Date().toISOString().slice(0,10);
+  addSet();addSet();addSet();
+  loadData();
+}
+
+function switchTab(t){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  const map={saisie:0,historique:1,exercices:2,stats:3};
+  document.querySelectorAll('.tab')[map[t]].classList.add('active');
+  if(t==='historique'){updateMetrics();renderHistory();}
+  if(t==='exercices'){renderExercices();}
+  if(t==='stats'){renderStats();}
+}
+
+function filterExoSelect(){
+  const muscle=document.getElementById('s-muscle').value;
+  const sel=document.getElementById('s-exercice');
+  sel.innerHTML='<option value="">— Sélectionner un exercice —</option>';
+  const filtered=muscle?exercices.filter(e=>e.muscle===muscle||e.muscle==='Full body'):exercices;
+  filtered.forEach(e=>{
+    const o=document.createElement('option');
+    o.value=e.nom;o.textContent=e.nom+(muscle?'':' ('+e.muscle+')');
+    sel.appendChild(o);
+  });
+}
+
+function buildExoSelect(){filterExoSelect();}
+
+function addExercice(){
+  const nom=document.getElementById('e-nom').value.trim();
+  const muscle=document.getElementById('e-muscle').value;
+  if(!nom||!muscle){alert('Veuillez renseigner le nom et le groupe musculaire.');return;}
+  if(exercices.find(e=>e.nom.toLowerCase()===nom.toLowerCase())){alert('Cet exercice existe déjà.');return;}
+  exercices.push({id:Date.now(),nom,muscle});
+  saveExo();
+  document.getElementById('e-nom').value='';
+  document.getElementById('e-muscle').value='';
+  renderExercices();
+  buildExoSelect();
+}
+
+function deleteExercice(id){
+  if(!confirm('Supprimer cet exercice ?'))return;
+  exercices=exercices.filter(e=>e.id!==id);
+  saveExo();renderExercices();buildExoSelect();
+}
+
+function renderExercices(){
+  const fm=document.getElementById('ef-muscle').value;
+  const filtered=fm?exercices.filter(e=>e.muscle===fm):exercices;
+  const container=document.getElementById('exo-list');
+  if(filtered.length===0){container.innerHTML='<div class="empty">Aucun exercice enregistré</div>';return;}
+  const byMuscle={};
+  filtered.forEach(e=>{if(!byMuscle[e.muscle])byMuscle[e.muscle]=[];byMuscle[e.muscle].push(e);});
+  let html='';
+  Object.entries(byMuscle).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([m,exos])=>{
+    html+=`<div style="margin-bottom:1rem"><div style="font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em">${m}</div><div class="exo-grid" style="margin-top:0">`;
+    exos.forEach(e=>{
+      html+=`<div class="exo-card"><div><div class="exo-name">${e.nom}</div></div>
+        <button class="exo-del" onclick="deleteExercice(${e.id})">🗑</button></div>`;
+    });
+    html+=`</div></div>`;
+  });
+  container.innerHTML=html;
+}
+
+function addSet(){
+  setCount++;
+  const c=document.getElementById('sets-container');
+  const row=document.createElement('div');
+  row.className='sets-row';row.id='set-row-'+setCount;
+  const n=setCount;
+  row.innerHTML=`<div style="width:40px;font-size:13px;color:var(--color-text-secondary);padding-top:6px">${n}</div>
+    <input type="number" min="1" max="100" placeholder="0" id="reps-${n}" style="width:90px">
+    <span class="lbl">reps</span>
+    <input type="number" min="0" step="0.5" placeholder="0" id="kg-${n}" style="width:90px">
+    <span class="lbl">kg</span>
+    <button class="btn" onclick="removeSet('set-row-${n}')" style="padding:4px 8px;flex-shrink:0">✕</button>`;
+  c.appendChild(row);
+}
+
+function removeSet(id){const el=document.getElementById(id);if(el)el.remove();}
+
+function selRes(v){
+  selectedRes=v;
+  document.querySelectorAll('.res-btn').forEach((b,i)=>b.classList.toggle('sel',i+1===v));
+}
+
+function collectSets(){
+  const rows=document.querySelectorAll('.sets-row');
+  const sets=[];
+  rows.forEach(row=>{
+    const id=row.id.replace('set-row-','');
+    const reps=parseFloat(document.getElementById('reps-'+id)?.value)||0;
+    const kg=parseFloat(document.getElementById('kg-'+id)?.value)||0;
+    if(reps>0||kg>0)sets.push({reps,kg});
+  });
+  return sets;
+}
+
+function saveSession(){
+  const date=document.getElementById('s-date').value;
+  const muscle=document.getElementById('s-muscle').value;
+  const exercice=document.getElementById('s-exercice').value;
+  const sets=collectSets();
+  const objectif=document.getElementById('s-objectif').value.trim();
+  if(!date||!muscle||!exercice||sets.length===0){alert('Veuillez remplir la date, le muscle, l\'exercice et au moins une série.');return;}
+  sessions.unshift({id:Date.now(),date,muscle,exercice,sets,ressenti:selectedRes,objectif});
+  saveData();
+  document.getElementById('s-exercice').value='';
+  document.getElementById('s-objectif').value='';
+  document.getElementById('sets-container').innerHTML='';
+  setCount=0;addSet();addSet();addSet();
+  selRes(0);
+  const msg=document.getElementById('save-msg');
+  msg.style.display='block';
+  setTimeout(()=>msg.style.display='none',2500);
+}
+
+function resIcon(v){return['','😫','😓','😐','😊','💪'][v]||'—';}
+
+function updateMetrics(){
+  let vol=0,ser=0;const mcount={};
+  sessions.forEach(s=>{s.sets.forEach(st=>{vol+=st.reps*st.kg;ser++;});mcount[s.muscle]=(mcount[s.muscle]||0)+1;});
+  document.getElementById('m-sessions').textContent=sessions.length;
+  document.getElementById('m-volume').textContent=Math.round(vol).toLocaleString('fr-FR');
+  document.getElementById('m-series').textContent=ser;
+  let fav='—',max=0;
+  Object.entries(mcount).forEach(([k,v])=>{if(v>max){max=v;fav=k;}});
+  document.getElementById('m-muscles').textContent=fav;
+}
+
+function renderHistory(){
+  const fd=document.getElementById('f-date').value;
+  const fm=document.getElementById('f-muscle').value;
+  const filtered=sessions.filter(s=>{if(fd&&s.date!==fd)return false;if(fm&&s.muscle!==fm)return false;return true;});
+  const container=document.getElementById('history-table');
+  if(filtered.length===0){container.innerHTML='<div class="empty">Aucune session trouvée</div>';return;}
+  let html=`<table><thead><tr><th>Date</th><th>Exercice</th><th>Muscles</th><th>Séries</th><th>Volume</th><th>Ressenti</th><th></th></tr></thead><tbody>`;
+  filtered.forEach(s=>{
+    const vol=s.sets.reduce((a,b)=>a+b.reps*b.kg,0);
+    const dateStr=new Date(s.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});
+    const setsDetail=s.sets.map((st,i)=>`S${i+1}: ${st.reps}×${st.kg}kg`).join(' | ');
+    html+=`<tr><td>${dateStr}</td>
+      <td><div style="font-weight:500">${s.exercice}</div><div style="font-size:11px;color:var(--color-text-secondary);margin-top:2px">${setsDetail}</div></td>
+      <td><span class="muscle-tag">${s.muscle}</span></td>
+      <td>${s.sets.length}</td><td>${Math.round(vol).toLocaleString('fr-FR')} kg</td>
+      <td style="font-size:18px">${resIcon(s.ressenti)}</td>
+      <td><button class="btn danger" onclick="deleteSession(${s.id})">🗑</button></td></tr>`;
+    if(s.objectif)html+=`<tr><td colspan="7" style="font-size:12px;color:var(--color-text-secondary);padding:4px 12px 8px">🎯 Objectif: ${s.objectif}</td></tr>`;
+  });
+  html+=`</tbody></table>`;
+  container.innerHTML=html;
+}
+
+function deleteSession(id){
+  if(!confirm('Supprimer cette session ?'))return;
+  sessions=sessions.filter(s=>s.id!==id);
+  saveData();updateMetrics();renderHistory();
+}
+
+const COLORS=['#7F77DD','#1D9E75','#D85A30','#378ADD','#BA7517','#D4537E','#888780','#639922'];
+
+function renderStats(){
+  const volData=sessions.slice().reverse().map(s=>({
+    date:new Date(s.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short'}),
+    vol:Math.round(s.sets.reduce((a,b)=>a+b.reps*b.kg,0))
+  }));
+  if(charts.volume)charts.volume.destroy();
+  const ctx1=document.getElementById('chart-volume');
+  if(volData.length===0){ctx1.parentElement.innerHTML='<div class="empty">Aucune donnée</div>';return;}
+  charts.volume=new Chart(ctx1,{type:'line',data:{labels:volData.map(d=>d.date),datasets:[{label:'Volume (kg)',data:volData.map(d=>d.vol),borderColor:'#7F77DD',backgroundColor:'rgba(127,119,221,0.1)',pointBackgroundColor:'#7F77DD',tension:0.3,fill:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{callback:v=>v+'kg'}},x:{ticks:{autoSkip:true,maxRotation:45}}}}});
+  const mcount={};
+  sessions.forEach(s=>mcount[s.muscle]=(mcount[s.muscle]||0)+1);
+  const mlabels=Object.keys(mcount),mvals=mlabels.map(k=>mcount[k]);
+  if(charts.muscles)charts.muscles.destroy();
+  const ctx2=document.getElementById('chart-muscles');
+  if(!mlabels.length){ctx2.parentElement.innerHTML='<div class="empty">Aucune donnée</div>';return;}
+  charts.muscles=new Chart(ctx2,{type:'doughnut',data:{labels:mlabels,datasets:[{data:mvals,backgroundColor:COLORS.slice(0,mlabels.length),borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}});
+  const total=mvals.reduce((a,b)=>a+b,0);
+  document.getElementById('muscle-legend').innerHTML=mlabels.map((l,i)=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="width:12px;height:12px;border-radius:2px;background:${COLORS[i]};display:inline-block;flex-shrink:0"></span><span>${l}</span><span style="margin-left:auto;color:var(--color-text-secondary)">${Math.round(mvals[i]/total*100)}%</span></div>`).join('');
+  const objSessions=sessions.filter(s=>s.objectif).slice(0,5);
+  const ol=document.getElementById('objectifs-list');
+  ol.innerHTML=objSessions.length?objSessions.map(s=>`<div style="display:flex;gap:12px;align-items:flex-start;padding:8px 0;border-bottom:0.5px solid var(--color-border-tertiary)"><div style="flex-shrink:0;font-size:12px;color:var(--color-text-secondary);min-width:70px">${new Date(s.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})}</div><div><div style="font-size:12px;color:var(--color-text-secondary)">${s.exercice} · <span class="muscle-tag">${s.muscle}</span></div><div style="font-size:13px;margin-top:2px">${s.objectif}</div></div></div>`).join(''):'<div class="empty" style="padding:1rem 0">Aucun objectif enregistré</div>';
+}
+
+function renderAll(){updateMetrics();buildExoSelect();}
+init();
+</script>
